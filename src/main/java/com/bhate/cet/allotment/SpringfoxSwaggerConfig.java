@@ -56,7 +56,7 @@ public class SpringfoxSwaggerConfig {
 																																		 .build()))
 													  .securitySchemes(newArrayList(apiKey()))
 													  .securityContexts(newArrayList(securityContext()))
-													  .enableUrlTemplating(true)
+													  .enableUrlTemplating(false)
 			//													  .globalOperationParameters(newArrayList(new ParameterBuilder().name("someGlobalParameter")
 			//																													.description("Description of someGlobalParameter")
 			//																													.modelRef(new ModelRef("string"))
