@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,14 +26,14 @@ public class ApplicationController {
 	private AllotmentProcessor allotmentProcessor;
 
 
-	@RequestMapping("/allotments")
-	public Allotments getAllotments(@RequestParam(value = "quota", defaultValue = "") String quota,
-									@RequestParam(value = "branch", defaultValue = "") String branch,
-									@RequestParam(value = "college", defaultValue = "") String college,
-									@RequestParam(value = "lowCutoffRank", defaultValue = "0") int lowCutoffRank,
-									@RequestParam(value = "highCutoffRank", defaultValue = "90000") int highCutoffRank,
-									@RequestParam(value = "limit", defaultValue = "15") int limit,
-									@RequestParam(value = "useRegexFilter", defaultValue = "false") boolean useRegexFilter) {
+	@GetMapping(value = "/allotments", produces = "application/json; charset=UTF-8")
+	public Allotments getAllotments(@RequestParam(value = "quota", defaultValue = "", required = false) String quota,
+									@RequestParam(value = "branch", defaultValue = "", required = false) String branch,
+									@RequestParam(value = "college", defaultValue = "", required = false) String college,
+									@RequestParam(value = "lowCutoffRank", defaultValue = "0", required = false) int lowCutoffRank,
+									@RequestParam(value = "highCutoffRank", defaultValue = "90000", required = false) int highCutoffRank,
+									@RequestParam(value = "limit", defaultValue = "15", required = false) int limit,
+									@RequestParam(value = "useRegexFilter", defaultValue = "false", required = false) boolean useRegexFilter) {
 		System.out.printf("quota=%s branch=%s college=%s %n", quota, branch, college);
 		final List<Allotment> list = allotmentProcessor.getAllAllotments();
 
@@ -86,7 +86,7 @@ public class ApplicationController {
 		};
 	}
 
-	@RequestMapping("/allotments1")
+	@GetMapping(value = "/jsonapi/allotments", produces = "application/json; charset=UTF-8")
 	public List<Result> getAllotments1() {
 		final List<Allotment> list = allotmentProcessor.getAllAllotments();
 		List<Result> results = list.stream()
@@ -97,7 +97,7 @@ public class ApplicationController {
 		return results;
 	}
 
-	@RequestMapping("/colleges")
+	@GetMapping(value = "/colleges", produces = "application/json; charset=UTF-8")
 	public Set<String> getColleges() {
 		return mapAllotmentWith(d -> d.collegeName);
 	}
@@ -112,12 +112,12 @@ public class ApplicationController {
 		return colleges;
 	}
 
-	@RequestMapping("/branches")
+	@GetMapping(value = "/branches", produces = "application/json; charset=UTF-8")
 	public Set<String> getBranches() {
 		return mapAllotmentWith(d -> d.branchName);
 	}
 
-	@RequestMapping("/quotas")
+	@GetMapping(value = "/quotas", produces = "application/json; charset=UTF-8")
 	public Set<String> getQuotas() {
 		return mapAllotmentWith(d -> d.quota);
 	}
