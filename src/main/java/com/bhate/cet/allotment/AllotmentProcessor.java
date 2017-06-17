@@ -1,21 +1,11 @@
 package com.bhate.cet.allotment;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVRecord;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -25,99 +15,101 @@ import org.springframework.stereotype.Service;
 @Service
 public class AllotmentProcessor {
 
-	public static String[] HEADERS = {"", "1G", "1K", "1R", "2AG", "2AK", "2AR", "2BG", "2BK", "2BR", "3AG", "3AK", "3AR", "3BG", "3BK", "3BR", "GM", "GMK", "GMR", "SCG", "SCK", "SCR", "STG", "STK", "STR"};
 
-	static String cleanup(String content) {
-		content = content.replaceAll(",,(\\d{5,6})(\\d{5,6})(\\d{5,6}),,", ",$1,$2,$3,");
-		content = content.replaceAll(",,(\\d{5,6})(\\d{5,6}),,(\\d{5,6})(\\d{5,6})", ",$1,$2,$3,$4");
-		content = content.replaceAll("(\\d{5,6})(\\d{5,6}),,(\\d{5,6})(\\d{5,6}),,", "$1,$2,$3,$4,");
-		content = content.replaceAll("(\\d{5,6})(\\d{5,6}),,", "$1,$2,");
-		content = content.replaceAll(",,(\\d{5,6})(\\d{5,6})", ",$1,$2");
-		content = content.replaceAll(",,(\\d{5,6}) ", ",$1,");
-		return content;
+	@Autowired
+	private AllotmentDao allotmentDao;
+
+	public void setAllotmentDao(AllotmentDao allotmentDao) {
+		this.allotmentDao = allotmentDao;
 	}
 
 	@Cacheable("allotments")
 	public List<Allotment> getAllAllotments() {
-		System.out.println("--caching--");
-		List<Allotment> allotments = Collections.emptyList();
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(getInputStream(), StandardCharsets.UTF_8))) {
-			final List<CSVRecord> records = reader.lines()
-												  .map(AllotmentProcessor::cleanup)
-												  .map(this::getCsvRecords)
-												  .flatMap(Collection::stream)
-												  .collect(Collectors.toList());
-			allotments = buildAllotmentData(records);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return allotments;
-	}
+		final List<List<String>> records = allotmentDao.getRecords();
 
-	private List<CSVRecord> getCsvRecords(String content) {
-		try {
-			Reader in = new StringReader(content);
-			final List<CSVRecord> records = CSVFormat.EXCEL.parse(in)
-														   .getRecords();
-			return records;
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return Collections.emptyList();
-	}
-
-	public InputStream getInputStream() {
-		final String fileName = "engg_cutoff_2016.csv";
-		return getClass().getClassLoader()
-						 .getResourceAsStream(fileName);
-	}
-
-	private List<Allotment> buildAllotmentData(List<CSVRecord> records) {
 		List<Allotment> list = new ArrayList<>();
-		String collegeName = null;
-		for (CSVRecord record : records) {
-			// System.out.printf("%10d |",record.getRecordNumber());
-			// for (String s : record) {
-			// System.out.printf(" |%10.10s| ",s);
-			// }
-			final String name = getCollegeName(record);
-			if (name != null) {
-				collegeName = name;
-			}
-			final String branchName = getBranchName(record);
 
-			if (branchName != null) {
-				for (int i = 1; i < record.size(); i++) {
-					String s = record.get(i);
-					if (!s.contains("--")) {
-
-						final Allotment data = new Allotment(collegeName, branchName, HEADERS[i], s);
-						list.add(data);
-					}
-				}
-			}
+		final AllotmentBuilder builder = new AllotmentBuilder(list);
+		for (List<String> record : records) {
+			builder.buildWith(record);
 		}
 		return list;
 	}
 
-	private String getBranchName(CSVRecord record) {
-		final Pattern pattern = Pattern.compile("^[A-Z][A-Z] ");
-		String input = record.get(0);
-		if (pattern.matcher(input)
-				   .find()) {
-			return input;
-		}
-		return null;
-	}
 
-	private String getCollegeName(CSVRecord record) {
-		final Pattern pattern = Pattern.compile("E\\d\\d\\d");
-		for (String s : record) {
-			if (pattern.matcher(s)
-					   .find()) {
-				return s;
-			}
+	private class AllotmentBuilder {
+		private List<Allotment> list;
+		private String collegeName;
+		private List<String> headers;
+		private String branchName;
+
+		public AllotmentBuilder(List<Allotment> list) {
+			this.list = list;
 		}
-		return null;
+
+		public AllotmentBuilder buildWith(List<String> record) {
+			if (record.size() == 1) {
+				final String s = record.get(0);
+				if (collegeName!=null){
+					collegeName = collegeName + " " + s;
+				}
+				return this;
+			}
+			final String name = getCollegeName(record);
+			if (name != null) {
+				collegeName = name;
+				branchName = null;
+				return this;
+			}
+			final List<String> h = getHeaders(record);
+			if (h != null) {
+				headers = h;
+				return this;
+			}
+			branchName = getBranchName(record);
+			if (branchName != null) {
+				for (int i = 1; i < record.size(); i++) {
+					String s = record.get(i);
+					if (!s.contains("--")) {
+						Allotment data = new Allotment(collegeName, branchName, headers.get(i - 1), s);
+						list.add(data);
+					}
+				}
+			}
+			return this;
+		}
+
+		private String getCollegeName(Collection<String> record) {
+			final Pattern pattern = Pattern.compile("E\\d\\d\\d");
+			for (String s : record) {
+				if (pattern.matcher(s)
+						   .find()) {
+					return s;
+				}
+			}
+			return null;
+		}
+
+		private List<String> getHeaders(List<String> record) {
+			String input = record.stream()
+								 .findFirst()
+								 .get();
+			if (input.equals("1G")) {
+				return record;
+			}
+			return null;
+		}
+
+		private String getBranchName(Collection<String> record) {
+			final Pattern pattern = Pattern.compile("^ [A-Z][A-Z] ");
+			String input = record.stream()
+								 .findFirst()
+								 .get();
+			if (pattern.matcher(input)
+					   .find()) {
+				return input;
+			}
+			return null;
+		}
 	}
 }

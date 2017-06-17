@@ -9,7 +9,7 @@ public class Allotment
 	final String branchName;
 	final String quota;
 	final long cutoffRank;
-	private final int id;
+	final int id;
 
 	public Allotment(String collegeName, String branchName, String quota, String cutoffRank) {
 		this.collegeName = collegeName;

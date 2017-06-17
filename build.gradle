@@ -29,6 +29,7 @@ dependencies {
     compile("org.apache.commons:commons-csv:+")
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.springframework.boot:spring-boot-starter-cache")
+    compile('com.itextpdf:itextpdf:5.5.11')
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('com.jayway.jsonpath:json-path')
 }

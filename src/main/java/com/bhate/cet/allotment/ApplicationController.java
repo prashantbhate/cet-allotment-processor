@@ -29,47 +29,61 @@ public class ApplicationController {
 	@RequestMapping("/allotments")
 	public Allotments getAllotments(@RequestParam(value = "quota", defaultValue = "") String quota,
 									@RequestParam(value = "branch", defaultValue = "") String branch,
-									@RequestParam(value = "college", defaultValue = "") String collegeName,
+									@RequestParam(value = "college", defaultValue = "") String college,
 									@RequestParam(value = "lowCutoffRank", defaultValue = "0") int lowCutoffRank,
-									@RequestParam(value = "highCutoffRank", defaultValue = "90000") int highCutoffRank) {
-		System.out.printf("quota=%s branch=%s collegeName=%s %n", quota, branch, collegeName);
+									@RequestParam(value = "highCutoffRank", defaultValue = "90000") int highCutoffRank,
+									@RequestParam(value = "limit", defaultValue = "15") int limit,
+									@RequestParam(value = "useRegexFilter", defaultValue = "false") boolean useRegexFilter) {
+		System.out.printf("quota=%s branch=%s college=%s %n", quota, branch, college);
 		final List<Allotment> list = allotmentProcessor.getAllAllotments();
-		final Pattern quotaPattern = Pattern.compile(quota);
-		final Pattern branchPattern = Pattern.compile(quota);
-		final Pattern collegePattern = Pattern.compile(quota);
 
 
 		final Predicate<Allotment> dataFilter = data -> {
 			if (data.cutoffRank < highCutoffRank)
 				if (data.cutoffRank > lowCutoffRank)
-								return true;
+					return true;
 			return false;
 		};
-		final Predicate<Allotment> regexFilter = data -> {
+
+		final Predicate<Allotment> predicate;
+		if (useRegexFilter) {
+			final Predicate<Allotment> regexFilter = regexFilter(quota, branch, college);
+			predicate = regexFilter;
+		} else {
+			final Predicate<Allotment> substringFilter = data -> {
+				if (data.quota.contains(quota))
+					if (data.branchName.contains(branch))
+						if (data.collegeName.contains(college))
+							return true;
+				return false;
+			};
+			predicate = substringFilter;
+		}
+
+		List<Allotment> allotments = list.stream()
+										 .filter(dataFilter)
+										 .filter(predicate)
+										 .sorted(comparingLong(d -> d.cutoffRank))
+										 .limit(limit)
+										 .collect(toList());
+		return new Allotments(allotments);
+	}
+
+	private Predicate<Allotment> regexFilter(String quota, String branch, String college) {
+		final Pattern quotaPattern = Pattern.compile(quota);
+		final Pattern branchPattern = Pattern.compile(branch);
+		final Pattern collegePattern = Pattern.compile(college);
+
+		return data -> {
 			if (quotaPattern.matcher(data.quota)
 							.find())
 				if (branchPattern.matcher(data.branchName)
 								 .find())
 					if (collegePattern.matcher(data.collegeName)
 									  .find())
-								return true;
-			return false;
-		};
-		final Predicate<Allotment> substringFilter = data -> {
-			if (data.quota.contains(quota))
-				if (data.branchName.contains(branch))
-					if (data.collegeName.contains(collegeName))
 						return true;
 			return false;
 		};
-
-		List<Allotment> allotments = list.stream()
-//										 .filter(dataFilter)
-//										 .filter(substringFilter)
-										 .sorted(comparingLong(d -> d.cutoffRank))
-//										 .limit(15)
-										 .collect(toList());
-		return new Allotments(allotments);
 	}
 
 	@RequestMapping("/allotments1")

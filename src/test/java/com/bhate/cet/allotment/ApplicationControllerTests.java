@@ -15,7 +15,9 @@
  */
 package com.bhate.cet.allotment;
 
+import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.isOneOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -28,6 +30,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -38,21 +42,62 @@ public class ApplicationControllerTests {
 	private MockMvc mockMvc;
 
 	@Test
-	public void noParamGreetingShouldReturnDefaultMessage() throws Exception {
+	public void itShouldReturnDefaultLimit() throws Exception {
 
-		this.mockMvc.perform(get("/allotments"))
-					.andDo(print())
-					.andExpect(status().isOk())
-					.andExpect(jsonPath("$.allotmentData").value(hasSize(15)));
+		do_GET_allotments().andExpect(jsonPath("$.allotments").value(hasSize(15)));
 	}
 
 	@Test
-	public void paramGreetingShouldReturnTailoredMessage() throws Exception {
-
-		this.mockMvc.perform(get("/allotments").param("quota", "GMK", "branch", "GMK", "collegeName", "E", "lowCutoffRank", "0", "highCutoffRank", "100"))
-					.andDo(print())
-					.andExpect(status().isOk())
-					.andExpect(jsonPath("$.allotmentData").value(hasSize(0)));
+	public void itShouldFilterSubstringByDefault() throws Exception {
+		final String[] params = {"quota", "GMK", "branch", "CS", "college", "E", "lowCutoffRank", "0", "highCutoffRank", "8000"};
+		do_GET_allotments(params).andExpect(jsonPath("$.allotments").value(hasSize(13)));
 	}
 
+	@Test
+	public void itShouldFilterByRegex() throws Exception {
+		final String[] params = {"branch", "CS|EC", "useRegexFilter", "true"};
+		do_GET_allotments(params).andExpect(jsonPath("$.allotments..branchName")
+			.value(everyItem(isOneOf(" EC Electronics", " CS Computers"))));
+	}
+
+	private ResultActions do_GET_allotments(String... paramValues) throws Exception {
+		final MockHttpServletRequestBuilder requestBuilder = get("/allotments");
+		ParamBuilder.params(requestBuilder, paramValues);
+		return this.mockMvc.perform(requestBuilder)
+						   .andDo(print())
+						   .andExpect(status().isOk());
+	}
+
+	private static class ParamBuilder {
+
+		private MockHttpServletRequestBuilder requestBuilder;
+		private int i;
+		private String key;
+		private String value;
+
+		public ParamBuilder(MockHttpServletRequestBuilder requestBuilder) {
+			this.requestBuilder = requestBuilder;
+		}
+
+		private static void params(MockHttpServletRequestBuilder requestBuilder, String[] paramValue) {
+			final ParamBuilder paramBuilder = new ParamBuilder(requestBuilder);
+			for (String s : paramValue) {
+				paramBuilder.invoke(s);
+			}
+		}
+
+		public void invoke(String s) {
+			if (i % 2 == 0) {
+				key = s;
+			} else {
+				value = s;
+			}
+			if (key != null && value != null) {
+				requestBuilder.param(key, value);
+				key = null;
+				value = null;
+			}
+			i++;
+		}
+	}
 }
