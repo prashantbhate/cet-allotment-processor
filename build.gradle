@@ -2,15 +2,17 @@ buildscript {
     repositories {
         mavenCentral()
     }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.3.RELEASE")
-    }
 }
+
+plugins {
+	id "de.infonautika.postman" version "0.0.5"
+	id 'org.springframework.boot' version "1.5.3.RELEASE"
+}
+
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
-apply plugin: 'org.springframework.boot'
 
 jar {
     baseName = 'cet-allotment-processor'
@@ -24,6 +26,7 @@ repositories {
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+
 dependencies {
     compile("com.google.guava:guava:+")
     compile("org.apache.commons:commons-csv:+")
@@ -36,3 +39,7 @@ dependencies {
     testCompile('com.jayway.jsonpath:json-path')
 }
 
+postman {
+	// specifies collection file pattern
+	// default: src/test/**/*.postman_collection.json
+}

@@ -1,0 +1,277 @@
+{
+	"variables": [],
+	"info": {
+		"name": "cet",
+		"_postman_id": "e8ddc849-0ddc-ebe4-a784-9e03c0b0bc7b",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "sanity",
+			"description": "",
+			"item": [
+				{
+					"name": "/logout",
+					"request": {
+						"url": "http://localhost:4201/api/v1.2/logout",
+						"method": "DELETE",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "/login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 204\"] = responseCode.code === 204;"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "http://localhost:4201/api/v1.2/login",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "/cutoff/files",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"tests[\"returns 2 entries\"] = jsonData.length === 2;",
+									"",
+									"postman.setGlobalVariable(\"file\", jsonData[0]);",
+									"",
+									"",
+									"",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "http://localhost:4201/api/v1.2/cutoff/files",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "/cutoff/files/current?cutoffFile={{file}}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 201\"] = responseCode.code === 201;"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": {
+							"raw": "http://localhost:4201/api/v1.2/cutoff/files/current?cutoffFile={{file}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4201",
+							"path": [
+								"api",
+								"v1.2",
+								"cutoff",
+								"files",
+								"current"
+							],
+							"query": [
+								{
+									"key": "cutoffFile",
+									"value": "{{file}}",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "POST",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "/cutoff/files/current",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"tests[\"File name set\"] = jsonData.fileName === postman.getGlobalVariable(\"file\");",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "http://localhost:4201/api/v1.2/cutoff/files/current",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "/allotments",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"tests[\"Length is \"+jsonData.allotments.length+\" expected\"+15] = jsonData.allotments.length === 15;"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "http://localhost:4201/api/v1.2/allotments",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "/colleges",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"tests[\"Length is \"+jsonData.length+\" expected\"+243] = jsonData.length === 243;"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "http://localhost:4201/api/v1.2/colleges",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "/branches",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"tests[\"Length is \"+jsonData.length+\" expected\"+35] = jsonData.length === 35;"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "http://localhost:4201/api/v1.2/branches",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "/quotas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 200\"] = responseCode.code === 200;",
+									"",
+									"var jsonData = JSON.parse(responseBody);",
+									"tests[\"Length is \"+jsonData.length+\" expected\"+24] = jsonData.length === 24;"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "http://localhost:4201/api/v1.2/quotas",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "/logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is 204\"] = responseCode.code === 204;"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "http://localhost:4201/api/v1.2/logout",
+						"method": "DELETE",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
