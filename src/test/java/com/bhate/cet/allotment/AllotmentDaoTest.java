@@ -22,7 +22,7 @@ public class AllotmentDaoTest {
 	@Before
 	public void setUp() throws Exception {
 		allotmentDao = new AllotmentDao();
-		records = allotmentDao.getRecords();
+		records = allotmentDao.getRecords("engg_cutoff_2016.pdf");
 	}
 
 	@Test

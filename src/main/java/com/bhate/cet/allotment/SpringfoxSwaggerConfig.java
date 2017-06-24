@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import com.fasterxml.classmate.TypeResolver;
+import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.builders.ResponseMessageBuilder;
@@ -23,6 +24,7 @@ import springfox.documentation.schema.WildcardType;
 import springfox.documentation.service.ApiKey;
 import springfox.documentation.service.AuthorizationScope;
 import springfox.documentation.service.SecurityReference;
+import springfox.documentation.service.Tag;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -57,14 +59,13 @@ public class SpringfoxSwaggerConfig {
 													  .securitySchemes(newArrayList(apiKey()))
 													  .securityContexts(newArrayList(securityContext()))
 													  .enableUrlTemplating(false)
-			//													  .globalOperationParameters(newArrayList(new ParameterBuilder().name("someGlobalParameter")
-			//																													.description("Description of someGlobalParameter")
-			//																													.modelRef(new ModelRef("string"))
-			//																													.parameterType("query")
-			//																													.required(true)
-			//																													.build()))
-			//													  .tags(new Tag("Pet Service", "All apis relating to pets"))
-			;
+													  .globalOperationParameters(newArrayList(new ParameterBuilder().name("Cookie")
+																													.description("JSESSIONID")
+																													.modelRef(new ModelRef("string"))
+																													.parameterType("Header")
+																													.required(false)
+																													.build()))
+													  .tags(new Tag("SESSION ID", "Require SessionID"));
 	}
 
 	private ApiKey apiKey() {

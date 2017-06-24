@@ -16,18 +16,22 @@
 package com.bhate.cet.allotment;
 
 import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.isOneOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -56,16 +60,50 @@ public class ApplicationControllerTests {
 	@Test
 	public void itShouldFilterByRegex() throws Exception {
 		final String[] params = {"branch", "CS|EC", "useRegexFilter", "true"};
-		do_GET_allotments(params).andExpect(jsonPath("$.allotments..branchName")
-			.value(everyItem(isOneOf(" EC Electronics", " CS Computers"))));
+		final Matcher<Iterable<String>> matcher = everyItem(isOneOf(" EC Electronics", " CS Computers"));
+		do_GET_allotments(params).andExpect(jsonPath("$.allotments..branchName").value(matcher));
 	}
 
 	private ResultActions do_GET_allotments(String... paramValues) throws Exception {
-		final MockHttpServletRequestBuilder requestBuilder = get("/allotments");
+		login();
+
+		MockHttpSession session = new MockHttpSession();
+		listFiles(session);
+
+		selectFile(session);
+
+
+		final MockHttpServletRequestBuilder requestBuilder = get("/api/v1.2/allotments").session(session);
 		ParamBuilder.params(requestBuilder, paramValues);
 		return this.mockMvc.perform(requestBuilder)
 						   .andDo(print())
 						   .andExpect(status().isOk());
+	}
+
+	private void selectFile(MockHttpSession session) throws Exception {
+		this.mockMvc.perform(post("/api/v1.2/cutoff/files/current").param("cutoffFile", "engg_cutoff_2016.pdf")
+																   .session(session))
+					.andDo(print())
+					.andExpect(status().isCreated());
+
+		this.mockMvc.perform(get("/api/v1.2/cutoff/files/current").session(session))
+					.andDo(print())
+					.andExpect(status().isOk())
+					.andExpect(jsonPath("$.fileName").value("engg_cutoff_2016.pdf"));
+	}
+
+	private void listFiles(MockHttpSession session) throws Exception {
+		this.mockMvc.perform(get("/api/v1.2/cutoff/files").param("cutoffFile", "")
+														  .session(session))
+					.andDo(print())
+					.andExpect(status().isOk())
+					.andExpect(jsonPath("$").value(hasItems("engg_cutoff_2016.pdf", "engg_cutoff_mock_2017.pdf")));
+	}
+
+	private void login() throws Exception {
+		this.mockMvc.perform(get("/api/v1.2/login"))
+					.andDo(print())
+					.andExpect(status().isNoContent());
 	}
 
 	private static class ParamBuilder {
@@ -79,7 +117,8 @@ public class ApplicationControllerTests {
 			this.requestBuilder = requestBuilder;
 		}
 
-		private static void params(MockHttpServletRequestBuilder requestBuilder, String[] paramValue) {
+		private static void params(MockHttpServletRequestBuilder requestBuilder,
+								   String[] paramValue) {
 			final ParamBuilder paramBuilder = new ParamBuilder(requestBuilder);
 			for (String s : paramValue) {
 				paramBuilder.invoke(s);

@@ -15,8 +15,8 @@ import com.google.common.collect.Table;
  */
 @Repository
 public class AllotmentDao {
-	public List<List<String>> getRecords() {
-		Table<Float, Float, String> records = extractTableFromPDF("engg_cutoff_2016.pdf");
+	public List<List<String>> getRecords(String fileName) {
+		Table<Float, Float, String> records = extractTableFromPDF(fileName);
 		return records.rowMap()
 					  .values()
 					  .stream()

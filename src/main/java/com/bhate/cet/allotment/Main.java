@@ -11,7 +11,7 @@ import java.util.List;
 public class Main {
 	public static void main(String[] args) throws IOException {
 		final AllotmentProcessor processor = new AllotmentProcessor();
-		final List<Allotment> process = processor.getAllAllotments();
+		final List<Allotment> process = processor.getAllAllotments("engg_cutoff_2016.pdf");
 
 	}
 

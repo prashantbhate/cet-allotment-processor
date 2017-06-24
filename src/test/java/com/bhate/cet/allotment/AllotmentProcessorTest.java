@@ -22,7 +22,7 @@ public class AllotmentProcessorTest {
 	public void setUp() throws Exception {
 		processor = new AllotmentProcessor();
 		processor.setAllotmentDao(new AllotmentDao());
-		allAllotments = processor.getAllAllotments();
+		allAllotments = processor.getAllAllotments("engg_cutoff_2016.pdf");
 	}
 
 	@Test

@@ -24,8 +24,8 @@ public class AllotmentProcessor {
 	}
 
 	@Cacheable("allotments")
-	public List<Allotment> getAllAllotments() {
-		final List<List<String>> records = allotmentDao.getRecords();
+	public List<Allotment> getAllAllotments(String fileName) {
+		final List<List<String>> records = allotmentDao.getRecords(fileName);
 
 		List<Allotment> list = new ArrayList<>();
 
